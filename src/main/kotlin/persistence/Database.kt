@@ -12,4 +12,8 @@ object Database {
     fun getUsersCollection(): MongoCollection<Document> {
         return database.getCollection("user")
     }
+
+    fun getTweetCollection(): MongoCollection<Document> {
+        return database.getCollection("tweet")
+    }
 }
