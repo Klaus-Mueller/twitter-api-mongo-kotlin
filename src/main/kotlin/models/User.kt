@@ -7,5 +7,8 @@ data class User(
     val name: String,
     val email: String,
     val password: String,
+    val followers: MutableList<String>  = mutableListOf(),
+    val following: MutableList<String>  = mutableListOf(),
     val createdDate: Date
+
 )
