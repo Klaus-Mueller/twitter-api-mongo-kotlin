@@ -5,7 +5,6 @@ import com.mongodb.client.model.Updates
 import com.twitter.models.User
 import com.twitter.util.PasswordUtil
 import org.bson.Document
-import org.bson.types.ObjectId
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -16,8 +15,7 @@ object UserRepository {
 
     fun saveUser(user: User) {
         try {
-            val document = Document("id", user.id)
-                .append("name", user.name)
+            val document = Document("id", user.id).append("name", user.name)
                 .append("email", user.email)
                 .append("password", PasswordUtil.hash(user.password))
                 .append("followers", mutableListOf<String>())
@@ -128,11 +126,13 @@ object UserRepository {
 
     fun getFollowers(userId: String): List<User> {
         try {
-            val query = Filters.eq("following", userId)
-            val usersDocument = usersCollection.find(query)
-            return usersDocument.map { doc ->
+            val query = Filters.eq("id", userId)
+            val usersDocument = usersCollection.find(query).firstOrNull()
+            val followersIds = usersDocument?.getList("followers", String::class.java) ?: emptyList()
+            val followers = usersCollection.find(Filters.`in`("id", followersIds))
+            return followers.map { doc ->
                 User(
-                    id = doc.getObjectId("id").toString(),
+                    id = doc.getString("id").toString(),
                     name = doc.getString("name"),
                     email = doc.getString("email"),
                     password = "",
@@ -157,7 +157,7 @@ object UserRepository {
                     id = doc.getString("id"),
                     name = doc.getString("name"),
                     email = doc.getString("email"),
-                    password = doc.getString("password"),
+                    password = "",
                     createdDate = doc.getDate("createdDate")
                 )
             }.toList()
@@ -173,7 +173,7 @@ object UserRepository {
             val update = Updates.combine(
                 Updates.set("name", updatedUser.name),
                 Updates.set("email", updatedUser.email),
-                Updates.set("password", updatedUser.password)
+                Updates.set("password", PasswordUtil.hash(updatedUser.password) )
             )
             val updateResult = usersCollection.updateOne(query, update)
 
@@ -193,8 +193,7 @@ object UserRepository {
     fun searchUsers(queryStr: String): List<User> {
         try {
             val query = Filters.or(
-                Filters.regex("name", queryStr, "i"),
-                Filters.regex("email", queryStr, "i")
+                Filters.regex("name", queryStr, "i"), Filters.regex("email", queryStr, "i")
             )
             val usersDocument = usersCollection.find(query)
             return usersDocument.map { doc ->
@@ -202,7 +201,7 @@ object UserRepository {
                     id = doc.getString("id"),
                     name = doc.getString("name"),
                     email = doc.getString("email"),
-                    password = doc.getString("password"),
+                    password = "",
                     createdDate = doc.getDate("createdDate")
                 )
             }.toList()
