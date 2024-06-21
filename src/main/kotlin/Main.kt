@@ -9,9 +9,9 @@ fun main() {
 
 class App {
     fun start() {
-        port(8080)
+        port(4567)
         val routeHandler = RouteHandler()
         routeHandler.setupRoutes()
-        println("Spark server started on port 8080")
+        println("Spark server started on port 4567")
     }
 }

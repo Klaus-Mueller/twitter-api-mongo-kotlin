@@ -6,8 +6,10 @@ import com.mongodb.client.MongoDatabase
 import org.bson.Document
 
 object Database {
-    private val client = MongoClients.create("mongodb://localhost:27017")
-    private val database = client.getDatabase("twitter-db")
+    private val mongoHost = System.getenv("MONGO_HOST") ?: "localhost"
+    private val mongoPort = System.getenv("MONGO_PORT") ?: "27017"
+    private val client = MongoClients.create("mongodb://$mongoHost:$mongoPort")
+    private val database: MongoDatabase = client.getDatabase("twitter-db")
 
     fun getUsersCollection(): MongoCollection<Document> {
         return database.getCollection("user")
