@@ -3,13 +3,18 @@ package com.twitter.folder
 import com.google.gson.Gson
 import com.mongodb.MongoWriteException
 import com.twitter.models.User
+import com.twitter.persistence.TweetRepository
 import com.twitter.persistence.UserRepository
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import spark.Request
 import spark.Response
 import spark.Spark.get
 import spark.Spark.post
 
 class UserRouteHandler(private val gson: Gson) : RouteHandler() {
+    private val logger: Logger = LoggerFactory.getLogger(UserRouteHandler::class.java)
+
 
     override fun setupRoutes() {
         post("/login", this::login)
@@ -35,6 +40,7 @@ class UserRouteHandler(private val gson: Gson) : RouteHandler() {
         return if (user != null) {
             req.session(true).attribute("user", user.id)
             res.status(200)
+            logger.info("User session set to user:${req.session().attribute<String>("user")}")
             gson.toJson(user)
         } else {
             res.status(401)
@@ -93,7 +99,7 @@ class UserRouteHandler(private val gson: Gson) : RouteHandler() {
 
         val userToFollow = gson.fromJson(req.body(), User::class.java)
         val userId = getUserIdFromSession(req)
-        return if (userToFollow != null && userId != null) {
+        return if (userToFollow != null ) {
             if (UserRepository.followUser(userId, userToFollow)) {
                 res.status(200)
                 "User followed successfully"

@@ -3,12 +3,16 @@ package com.twitter.folder
 import com.google.gson.Gson
 import com.twitter.models.Tweet
 import com.twitter.persistence.TweetRepository
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import spark.Request
 import spark.Response
 import spark.Spark.get
 import spark.Spark.post
 
 class TweetRouteHandler(private val gson: Gson) : RouteHandler() {
+    private val logger: Logger = LoggerFactory.getLogger(TweetRouteHandler::class.java)
+
 
     override fun setupRoutes() {
         post("/saveTweet", this::saveTweet)
@@ -107,6 +111,7 @@ class TweetRouteHandler(private val gson: Gson) : RouteHandler() {
     }
 
     private fun getTimeline(req: Request, res: Response): String {
+        logger.info("User session set to user:${req.session().attribute<String>("user")}")
         if (!isAuthenticated(req)) {
             res.status(401)
             return "User not authenticated"
