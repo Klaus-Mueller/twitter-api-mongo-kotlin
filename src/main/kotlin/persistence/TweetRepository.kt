@@ -112,19 +112,24 @@ object TweetRepository {
     fun getTimeline(userId: String): List<Tweet> {
         try {
             val following = UserRepository.getFollowing(userId)
-            val followingUserIds = following.map { it.id }
-            val query = Filters.`in`("userId", followingUserIds)
-            val tweetsDocument = tweetsCollection.find(query).sort(Sorts.descending("createdDate"))
+            val followingUserIds = following.map { it.id }.toSet()  // Convert to a Set for quick lookup
+            val allTweets = tweetsCollection.find().sort(Sorts.descending("createdDate"))
 
-            return tweetsDocument.map { doc ->
-                Tweet(
-                    id = doc.getObjectId("_id").toString(),
-                    text = doc.getString("text"),
-                    userId = doc.getString("userId"),
-                    createdDate = doc.getDate("createdDate"),
-                    likes = doc.getList("likes", String::class.java) ?: mutableListOf()
+            return allTweets.map { doc ->
+                val tweetUserId = doc.getString("userId")
+                TweetWithRelevance(
+                    tweet = Tweet(
+                        id = doc.getObjectId("_id").toString(),
+                        text = doc.getString("text"),
+                        userId = tweetUserId,
+                        createdDate = doc.getDate("createdDate"),
+                        likes = doc.getList("likes", String::class.java) ?: mutableListOf()
+                    ),
+                    isFollowedUser = followingUserIds.contains(tweetUserId)
                 )
-            }.toList()
+            }.sortedWith(compareByDescending<TweetWithRelevance> { it.isFollowedUser }.thenByDescending { it.tweet.createdDate })
+                .map { it.tweet }  // Map back to the Tweet objects
+                .toList()
         } catch (e: MongoException) {
             logger.error("MongoException occurred while fetching timeline for userId {}: {}", userId, e.message)
             throw e
@@ -133,4 +138,8 @@ object TweetRepository {
             throw e
         }
     }
+    data class TweetWithRelevance(
+        val tweet: Tweet,
+        val isFollowedUser: Boolean
+    )
 }

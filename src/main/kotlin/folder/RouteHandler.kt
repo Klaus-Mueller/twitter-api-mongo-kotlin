@@ -12,6 +12,6 @@ open class RouteHandler {
     }
 
     fun isAuthenticated(req: spark.Request): Boolean {
-        return req.session().attribute<String>("user") != null
+        return req.session(false)?.attribute<String>("user") != null
     }
 }

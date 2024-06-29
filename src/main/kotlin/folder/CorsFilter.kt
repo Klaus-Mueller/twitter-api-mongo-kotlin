@@ -26,7 +26,7 @@ object CorsFilter {
         }
 
         // Handle actual requests
-        val filter: Filter = Filter { request: Request?, response: Response ->
+        val filter: Filter = Filter { request, response ->
             if (!response.raw().containsHeader("Access-Control-Allow-Origin")) {
                 response.header("Access-Control-Allow-Origin", allowedOrigin)
             }
