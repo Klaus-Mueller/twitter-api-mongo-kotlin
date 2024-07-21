@@ -38,7 +38,7 @@ The purpose of this API is to provide a backend service that supports typical so
 1. **Clone the repository**:
 
    ```sh
-   git clone https://github.com/yourusername/twitter-api-mongo-kotlin.git
+   git clone https://github.com/Klaus-Mueller/twitter-api-mongo-kotlin.git
    cd twitter-api-mongo-kotlin
 
 2. **Build the Project**:
